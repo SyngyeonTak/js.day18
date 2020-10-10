@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .wrapper{
+            width: 1200px;
+            height: 700px;
+            background: yellow;
+            margin: auto;
+            overflow: hidden;  
+        }
+
+        .dash{
+            width: 200px;
+            height: 100%;
+            position:relative;
+            background: gold;
+            font-size: 10px;
+            text-align: center;
+            float: left;
+        }
+
+        .dash button, select, input{
+            width: 90%;
+            height: 40px;
+            margin-bottom: 4px;
+            font-size: 24px;
+        }
+
+        #hpBox{
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            margin-top: 50px;
+            padding:3px;
+            box-sizing: border-box;
+        }
+
+        #stage{
+            width: 1000px;
+            height: 100%;
+            background: dodgerblue;
+            float: left;
+            position: relative;/*자식 때문에*/
+        }
+
+       #scoreBox{
+           width: 100%;
+           height: 100px;
+           font-size: 50px;
+           font-weight: bold;
+           text-align: center;
+       }
+
+        #stage{
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+    </style>
+    <script src = "../js_workspace/js/lib.js"></script>
+    <script>
+        
+        var wrapper, stage, sel, dash, txt, hpBox, scoreBox, itemBox;
+        
+        var wordSet = [
+            ["농구", "축구", "야구", "배구", "탁구", "배드민턴", "핸드볼", "테니스", "비치발리볼", "소프트볼", "컬링", "하키"],
+            ["귤","가평","태권도","연습장","3호선","감자","토성","메모리","호주","흑해", "뉴질랜드", "럭비"],
+            ["파전", "족발", "보쌈", "치킨", "짜장면", "짬뽕", "피자", "곱창", "막창", "갈비", "한우", "순댓국"],
+            ["시몬스", "하든", "커리", "어빙", "르브론", "갈매기", "쿰보", "레너드", "폴조지", "요키치", "머레이", "미첼"],
+            ["리눅스", "자바", "C언어", "C#", "C++", "파이썬", "PHP", "자바스크립트", "리엑트", "스프링", "노드", "루비"]
+        ];
+        
+        var wordArray = new Array();
+        
+        var level = 0;
+        var levelTotal = 5;
+        var wordLeft = 85;
+        
+        var score = 0;
+        var speed = 5;
+        
+        var hpTotal = 9;
+        var hpArray = new Array();
+
+        var flag = false;
+        
+        function startGame(){
+            flag = !flag;
+            txt.focus();
+        }
+
+        function move(){
+            var len = wordArray.length;
+            checkGameOver();
+            if(flag){
+                for(var i = 0; i<len; i++){
+                    wordArray[i].style.top = parseInt(wordArray[i].style.top)+speed + "px";
+                    
+                    if(parseInt(wordArray[i].style.top) >=700){
+                        stage.removeChild(wordArray[i]);//array를 없애지 않으면 stage.removeChild(wordArray[i])에서 에러가 남
+                        wordArray.splice(i, 1);
+                        len = len-1;//배열요소가 없어지면 그만큼 배열크기를 1씩 줄여야함
+                        i = i-1;//배열요소를 없애면 다음에 가리킬 요소는 해당 번째 index여야 한다.(삭제되고 나면 다음 요소들이 앞당겨지기 때문!)
+                        takenHp();
+                    }
+                }
+            }
+        }
+
+        function checkGameOver(){
+            if(hpArray.length == 0){
+                flag = !flag;
+                wordArray = [];//array를 없애지 않으면 stage.removeChild(wordArray[i])에서 에러가 남
+                stage.innerHTML = "Game Over";
+                stage.style.fontSize = 100+"px";
+                clearTimeout(st);
+                sel.disabled = true;
+                
+            }else if(wordArray.length == 0){
+                stage.innerHTML = score+"점";
+                stage.style.fontSize = 100+"px";
+            }
+        }
+
+        function takenHp(){
+            if(hpArray.length >= 1){
+                hpBox.removeChild(hpArray[hpArray.length-1]);
+                hpArray.splice(hpArray.length-1, 1);
+            }
+
+        }
+
+        function setLevel(lev){
+            stage.innerHTML = "";
+
+            level = parseInt(lev);
+            wordArray.splice(0, wordSet[level].length);
+            speed = (level)*1.5+5;
+            createWord();
+            
+            flag = false;
+        }
+        
+        function createHp(){
+            for(var i=0; i<hpTotal; i++){
+                var hp = document.createElement("div");
+                hp.style.width = 60+"px";
+                hp.style.height = 60+"px";
+                hp.style.background = "red";
+                hp.style.border = "2px solid yellow";
+                hp.style.float = "left";
+
+                hpArray.push(hp);
+                hpBox.appendChild(hp);
+            }
+        }
+
+        function createLevel(){
+            for(var i = 0; i< levelTotal; i++){
+                var op = document.createElement("option");
+                op.innerHTML = (i+1)+"레벨";
+                op.value = i;
+
+                sel.appendChild(op);
+            }
+        }
+
+        function createWord(){
+            for(var i = 0; i<wordSet[level].length; i++){
+                var word = document.createElement("span");
+                word.innerHTML = wordSet[level][i];
+                word.style.position = "absolute";
+                word.style.left = i*wordLeft+"px";
+                word.style.fontSize= 16+"px";
+                word.style.top = getRandomBetween(-200, 0)+"px";
+                stage.appendChild(word);
+                wordArray.push(word);
+            }
+        }
+
+
+        function printScore(){
+            scoreBox.innerHTML = score +" 점";
+        }
+
+        function init(){
+            wrapper = document.querySelector(".wrapper");
+            dash = document.querySelector(".dash");
+            sel = document.getElementById("sel");
+            txt = document.getElementById("txt");
+            hpBox = document.getElementById("hpBox");
+            scoreBox = document.getElementById("scoreBox");
+            itemBox = document.getElementById("itemBox");
+            stage = document.getElementById("stage");
+
+            txt.focus();
+
+            printScore();
+
+            txt.addEventListener("keyup", function(e){
+                var len = wordArray.length;
+                if(e.keyCode == 13){
+                    for(var i = 0; i<len; i++){
+                        if(txt.value == wordArray[i].innerHTML){
+                            stage.removeChild(wordArray[i]);
+                            wordArray.splice(i, 1);
+                            len = len-1;
+                            score += 10;
+                            printScore();
+
+                        }
+                    }
+                    txt.value = "";
+                }
+            });
+        }
+
+        window.addEventListener("load", function(){
+            init();
+            createWord();
+            createLevel();
+            createHp();
+            st = setInterval("move()", 150);
+        });
+    </script>
+</head>
+<body>
+    <div class = "wrapper">
+        <div class = "dash">
+            <button onclick = "startGame()">시작</button>
+            <select id="sel" onchange="setLevel(this.value)"></select>
+            <input id = "txt" type="text" placeholder="단어입력"/>
+            <div id = "hpBox"></div>
+            <div id = "scoreBox"></div>
+            <div id = "itemBox"></div>
+        </div>
+        <div id = "stage"></div>
+    </div>
+</body>
+</html>
